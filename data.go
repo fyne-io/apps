@@ -10,13 +10,20 @@ import (
 )
 
 type App struct {
-	ID, Name, Img, Excerpt string
-	URL, Homepage          string
-	Date                   time.Time
+	ID, Name, Icon     string
+	Developer, Summary string
+	URL, Website       string
 
-	Git, Tag, Dir, Version string
+	Date    time.Time
+	Version string
+
+	Source AppSource
 }
 
+type AppSource struct {
+	Git, Tag, Dir string
+
+}
 type AppList []App
 
 func parseAppList(reader io.Reader) (AppList, error) {

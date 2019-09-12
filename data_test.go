@@ -34,14 +34,14 @@ func TestParseAppList(t *testing.T) {
 	app := list[0]
 	assert.Equal(t, "xyz.andy.beebui", app.ID)
 	assert.Equal(t, "beebUI", app.Name)
-	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true", app.Img)
+	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true", app.Icon)
 	assert.Equal(t, time.Date(2019, 03, 17, 19, 32, 14, 0, time.Local), app.Date)
-	assert.Equal(t, "A BBC Micro Emulator based on Fyne and skx/gobasic", app.Excerpt)
+	assert.Equal(t, "A BBC Micro Emulator based on Fyne and skx/gobasic", app.Summary)
 	assert.Equal(t, "https://apps.fyne.io/apps/beebui.html", app.URL)
-	assert.Equal(t, "https://github.com/andydotxyz/beebui", app.Homepage)
+	assert.Equal(t, "https://github.com/andydotxyz/beebui", app.Website)
 
-	assert.Equal(t, "https://github.com/andydotxyz/beebui.git", app.Git)
-	assert.Equal(t, "master", app.Tag)
-	assert.Equal(t, "cmd/beebui", app.Dir)
+	assert.Equal(t, "https://github.com/andydotxyz/beebui.git", app.Source.Git)
+	assert.Equal(t, "master", app.Source.Tag)
+	assert.Equal(t, "cmd/beebui", app.Source.Dir)
 	assert.Equal(t, "", app.Version)
 }

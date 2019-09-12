@@ -27,17 +27,17 @@ func (w *welcome) loadAppDetail(app App) {
 
 	w.name.SetText(app.Name)
 	w.date.SetText(app.Date.Format("02 Jan 2006"))
-	w.excerpt.SetText(app.Excerpt)
+	w.excerpt.SetText(app.Summary)
 
-	if app.Img != "" {
-		res, err := loadResourceFromURL(app.Img)
+	if app.Icon != "" {
+		res, err := loadResourceFromURL(app.Icon)
 		if err == nil {
 			w.img.Resource = res
 			canvas.Refresh(w.img)
 		}
 	}
 
-	parsed, err := url.Parse(app.Homepage)
+	parsed, err := url.Parse(app.Website)
 	if err != nil {
 		w.link.SetText("")
 		return
