@@ -40,6 +40,12 @@ func TestParseAppList(t *testing.T) {
 	assert.Equal(t, "https://apps.fyne.io/apps/beebui.html", app.URL)
 	assert.Equal(t, "https://github.com/andydotxyz/beebui", app.Website)
 
+	assert.NotNil(t, app.Screenshots)
+	assert.Equal(t, 1, len(app.Screenshots))
+	shot := app.Screenshots[0]
+	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true", shot.Image)
+	assert.Equal(t, "desktop", shot.Type)
+
 	assert.Equal(t, "https://github.com/andydotxyz/beebui.git", app.Source.Git)
 	assert.Equal(t, "master", app.Source.Tag)
 	assert.Equal(t, "cmd/beebui", app.Source.Dir)

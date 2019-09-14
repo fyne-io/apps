@@ -13,6 +13,7 @@ type App struct {
 	ID, Name, Icon     string
 	Developer, Summary string
 	URL, Website       string
+	Screenshots        []AppScreenshot
 
 	Date    time.Time
 	Version string
@@ -20,10 +21,14 @@ type App struct {
 	Source AppSource
 }
 
+type AppScreenshot struct {
+	Image, Type string
+}
+
 type AppSource struct {
 	Git, Tag, Dir string
-
 }
+
 type AppList []App
 
 func parseAppList(reader io.Reader) (AppList, error) {

@@ -12,29 +12,33 @@ import (
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
 	"fyne.io/fyne/layout"
+	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
 )
 
 type welcome struct {
 	shownID             string
 	name, excerpt, date *widget.Label
+	developer, version  *widget.Label
 	link                *widget.Hyperlink
-	img                 *canvas.Image
+	icon, screenshot    *canvas.Image
 }
 
 func (w *welcome) loadAppDetail(app App) {
 	w.shownID = app.ID
 
 	w.name.SetText(app.Name)
+	w.developer.SetText(app.Developer)
+	w.version.SetText(app.Version)
 	w.date.SetText(app.Date.Format("02 Jan 2006"))
 	w.excerpt.SetText(app.Summary)
 
-	if app.Icon != "" {
-		res, err := loadResourceFromURL(app.Icon)
-		if err == nil {
-			w.img.Resource = res
-			canvas.Refresh(w.img)
-		}
+	w.icon.Resource = nil
+	go setImageFromURL(w.icon, app.Icon)
+
+	w.screenshot.Resource = nil
+	if len(app.Screenshots) > 0 {
+		go setImageFromURL(w.screenshot, app.Screenshots[0].Image)
 	}
 
 	parsed, err := url.Parse(app.Website)
@@ -44,6 +48,21 @@ func (w *welcome) loadAppDetail(app App) {
 	}
 	w.link.SetText(parsed.Host)
 	w.link.SetURL(parsed)
+}
+
+func setImageFromURL(img *canvas.Image, location string) {
+	if location == "" {
+		return
+	}
+
+	res, err := loadResourceFromURL(location)
+	if err != nil {
+		img.Resource = theme.WarningIcon()
+	} else {
+		img.Resource = res
+	}
+
+	canvas.Refresh(img)
 }
 
 func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
@@ -62,23 +81,46 @@ func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
 	return fyne.NewStaticResource(name, bytes), nil
 }
 
+// iconHoverLayout specifies a layout that floats an icon image top right over other content
+type iconHoverLayout struct {
+	content, icon fyne.CanvasObject
+}
+
+func (i *iconHoverLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
+	i.content.Resize(size)
+
+	i.icon.Resize(fyne.NewSize(64, 64))
+	i.icon.Move(fyne.NewPos(size.Width - i.icon.Size().Width, 0))
+}
+
+func (i *iconHoverLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	return i.content.MinSize()
+}
+
 func loadWelcome(apps AppList) fyne.CanvasObject {
 	w := &welcome{}
 	w.name = widget.NewLabel("")
+	w.developer = widget.NewLabel("")
 	w.link = widget.NewHyperlink("", nil)
-	w.date = widget.NewLabel("")
 	w.excerpt = widget.NewLabel("")
-	w.img = &canvas.Image{}
-	w.img.SetMinSize(fyne.NewSize(320, 240))
-	w.img.FillMode = canvas.ImageFillContain
+	w.version = widget.NewLabel("")
+	w.date = widget.NewLabel("")
+	w.icon = &canvas.Image{}
+	w.icon.FillMode = canvas.ImageFillContain
+	w.screenshot = &canvas.Image{}
+	w.screenshot.SetMinSize(fyne.NewSize(320, 240))
+	w.screenshot.FillMode = canvas.ImageFillContain
 
-	details := widget.NewForm(
+	content := widget.NewForm(
 		&widget.FormItem{Text: "Name", Widget: w.name},
-		&widget.FormItem{Text: "HomePage", Widget: w.link},
-		&widget.FormItem{Text: "Date", Widget: w.date},
+		&widget.FormItem{Text: "Developer", Widget: w.developer},
+		&widget.FormItem{Text: "Website", Widget: w.link},
 		&widget.FormItem{Text: "Excerpt", Widget: w.excerpt},
-		&widget.FormItem{Text: "Image", Widget: w.img},
+		&widget.FormItem{Text: "Screenshot", Widget: w.screenshot},
+		&widget.FormItem{Text: "Version", Widget: w.version},
+		&widget.FormItem{Text: "Date", Widget: w.date},
 	)
+	details := fyne.NewContainerWithLayout(&iconHoverLayout{content:content, icon:w.icon}, content, w.icon)
 
 	list := widget.NewVBox()
 	for _, app := range apps {

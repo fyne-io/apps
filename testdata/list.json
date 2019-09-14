@@ -1,7 +1,7 @@
 [{
   "id": "xyz.andy.beebui",
   "name": "beebUI",
-  "icon": "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true",
+  "icon": "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true",
   "summary": "A BBC Micro Emulator based on Fyne and skx/gobasic",
   "url": "https://apps.fyne.io/apps/beebui.html",
 
@@ -9,6 +9,12 @@
   "website": "https://github.com/andydotxyz/beebui",
   "developer": "Andy Williams",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/andydotxyz/beebui.git",
     "tag": "master",
@@ -19,7 +25,7 @@
 },{
   "id": "io.fyne.examples.bugs",
   "name": "Bugs",
-  "icon": "https://github.com/fyne-io/examples/raw/develop/img/bugs.png",
+  "icon": "https://github.com/fyne-io/examples/raw/develop/img/icon/bug.png",
   "summary": "Hunt the squares to reveal everything apart from the bugs!",
   "url": "https://apps.fyne.io/apps/bugs.html",
 
@@ -27,17 +33,23 @@
   "website": "https://github.com/fyne-io/examples/",
   "developer": "The Fyne Team",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/fyne-io/examples/raw/develop/img/bugs.png",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
     "tag": "develop",
     "dir": "cmd/bugs"
   },
   "version": "",
-  "date": "2018-10-18T22:51:00+00:00"
+  "date": "2018-10-18T23:51:00+01:00"
 },{
   "id": "io.fyne.examples.calculator",
   "name": "Calculator",
-  "icon": "https://github.com/fyne-io/examples/raw/develop/img/calc-dark.png",
+  "icon": "https://raw.githubusercontent.com/fyne-io/examples/develop/img/icon/calculator.png",
   "summary": "A calculator app",
   "url": "https://apps.fyne.io/apps/calculator.html",
 
@@ -45,17 +57,23 @@
   "website": "https://github.com/fyne-io/examples/",
   "developer": "The Fyne Team",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/fyne-io/examples/raw/develop/img/calc-dark.png",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
     "tag": "develop",
     "dir": "cmd/calculator"
   },
   "version": "",
-  "date": "2018-10-04T22:51:00+00:00"
+  "date": "2018-10-04T23:51:00+01:00"
 },{
   "id": "xyz.andy.dicomviewer",
   "name": "DICOM Viewer",
-  "icon": "https://github.com/andydotxyz/dicomgraphics/blob/master/screenshot.png?raw=true",
+  "icon": "https://github.com/andydotxyz/dicomgraphics/raw/master/icon.png",
   "summary": "A DICOM image viewer and utilities",
   "url": "https://apps.fyne.io/apps/dicom_viewer.html",
 
@@ -63,17 +81,23 @@
   "website": "https://github.com/andydotxyz/dicomgraphics/",
   "developer": "Andy Williams",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/andydotxyz/dicomgraphics/blob/master/screenshot.png?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/andydotxyz/dicomgraphics.git",
     "tag": "master",
     "dir": "cmd/dicomviewer"
   },
   "version": "",
-  "date": "2019-07-13T09:15:00+00:00"
+  "date": "2019-07-13T10:15:00+01:00"
 },{
   "id": "io.fyne.examples.fractal",
   "name": "Fractal",
-  "icon": "https://github.com/fyne-io/examples/raw/develop/img/fractal.png",
+  "icon": "https://raw.githubusercontent.com/fyne-io/examples/develop/img/icon/fractal.png",
   "summary": "Fractal viewer for the Mandelbrot set",
   "url": "https://apps.fyne.io/apps/fractal.html",
 
@@ -81,17 +105,23 @@
   "website": "https://github.com/fyne-io/examples/",
   "developer": "The Fyne Team",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/fyne-io/examples/raw/develop/img/fractal.png",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
     "tag": "develop",
     "dir": "cmd/fractal"
   },
   "version": "",
-  "date": "2018-10-04T22:51:00+00:00"
+  "date": "2018-10-04T23:51:00+01:00"
 },{
   "id": "xyz.andy.gameboy",
   "name": "GameBoy.live",
-  "icon": "https://github.com/andydotxyz/fynegameboy/blob/master/zelda_screen.png?raw=true",
+  "icon": "https://github.com/andydotxyz/fynegameboy/raw/master/gameboy.png",
   "summary": "A Fyne based interface using the gameboy.live emulator written by AaronLiu (@HFO4).",
   "url": "https://apps.fyne.io/apps/gameboy.html",
 
@@ -99,6 +129,12 @@
   "website": "https://github.com/andydotxyz/fynegameboy",
   "developer": "Andy Williams",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/andydotxyz/fynegameboy/blob/master/zelda_screen.png?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/andydotxyz/fynegameboy.git",
     "tag": "master",
@@ -109,7 +145,7 @@
 },{
   "id": "com.github.gmlewis.gerberviewer",
   "name": "Gerber Viewer",
-  "icon": "https://github.com/gmlewis/go-gerber/blob/master/examples/hex-bifilar-coil/hex-bifilar-coil-layers.gif?raw=true",
+  "icon": "",
   "summary": "A viewer for Gerber RS274X files (for PCBs)",
   "url": "https://apps.fyne.io/apps/gerber_viewer.html",
 
@@ -117,6 +153,12 @@
   "website": "https://github.com/gmlewis/go-gerber/",
   "developer": "Glenn Lewis",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/gmlewis/go-gerber/blob/master/examples/hex-bifilar-coil/hex-bifilar-coil-layers.gif?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/gmlewis/go-gerber.git",
     "tag": "master",
@@ -127,7 +169,7 @@
 },{
   "id": "com.github.lucor.opensnitch",
   "name": "Fyne OpenSnitch",
-  "icon": "https://github.com/lucor/fyne-opensnitch/blob/master/screenshot/ask_rule.png?raw=true",
+  "icon": "",
   "summary": "An OpenSnitch UI in Go using Fyne",
   "url": "https://apps.fyne.io/apps/opensnitch.html",
 
@@ -135,17 +177,23 @@
   "website": "https://github.com/lucor/fyne-opensnitch/",
   "developer": "Luca Corbo",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/lucor/fyne-opensnitch/blob/master/screenshot/ask_rule.png?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/lucor/fyne-opensnitch.git",
     "tag": "master",
     "dir": ""
   },
   "version": "",
-  "date": "2019-05-13T08:43:42+00:00"
+  "date": "2019-05-13T09:43:42+01:00"
 },{
   "id": "com.github.potato-arcade.p64",
   "name": "Potato Arcade",
-  "icon": "https://github.com/potato-arcade/p64/blob/master/pong.gif?raw=true",
+  "icon": "https://github.com/potato-arcade/p64/raw/master/potato.jpg?raw=true",
   "summary": "The P64 computer console. In Golang.",
   "url": "https://apps.fyne.io/apps/potato_arcade.html",
 
@@ -153,6 +201,12 @@
   "website": "https://github.com/potato-arcade/p64",
   "developer": "SteveOC",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/potato-arcade/p64/blob/master/pong.gif?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/potato-arcade/p64.git",
     "tag": "master",
@@ -163,7 +217,7 @@
 },{
   "id": "io.fyne.examples.solitaire",
   "name": "Solitaire",
-  "icon": "https://github.com/fyne-io/examples/blob/develop/img/solitaire.png?raw=true",
+  "icon": "https://raw.githubusercontent.com/fyne-io/examples/develop/img/icon/solitaire.png",
   "summary": "Solitaire card game",
   "url": "https://apps.fyne.io/apps/solitaire.html",
 
@@ -171,6 +225,12 @@
   "website": "https://github.com/fyne-io/examples/",
   "developer": "The Fyne Team",
 
+  "screenshots": [
+    {
+      "image": "https://github.com/fyne-io/examples/blob/develop/img/solitaire.png?raw=true",
+      "type": "desktop"
+    }
+  ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
     "tag": "develop",
