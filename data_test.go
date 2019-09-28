@@ -34,7 +34,7 @@ func TestParseAppList(t *testing.T) {
 	app := list[0]
 	assert.Equal(t, "xyz.andy.beebui", app.ID)
 	assert.Equal(t, "beebUI", app.Name)
-	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true", app.Icon)
+	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true", app.Icon)
 	assert.Equal(t, time.Date(2019, 03, 17, 19, 32, 14, 0, time.Local), app.Date)
 	assert.Equal(t, "A BBC Micro Emulator based on Fyne and skx/gobasic", app.Summary)
 	assert.Equal(t, "https://apps.fyne.io/apps/beebui.html", app.URL)
@@ -43,11 +43,10 @@ func TestParseAppList(t *testing.T) {
 	assert.NotNil(t, app.Screenshots)
 	assert.Equal(t, 1, len(app.Screenshots))
 	shot := app.Screenshots[0]
-	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true", shot.Image)
+	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/beebui.png?raw=true", shot.Image)
 	assert.Equal(t, "desktop", shot.Type)
 
 	assert.Equal(t, "https://github.com/andydotxyz/beebui.git", app.Source.Git)
-	assert.Equal(t, "master", app.Source.Tag)
-	assert.Equal(t, "cmd/beebui", app.Source.Dir)
+	assert.Equal(t, "github.com/andydotxyz/beebui/cmd/beebui", app.Source.Package)
 	assert.Equal(t, "", app.Version)
 }

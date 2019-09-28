@@ -17,8 +17,7 @@
   ],
   "source": {
     "git": "https://github.com/andydotxyz/beebui.git",
-    "tag": "master",
-    "dir": "cmd/beebui"
+    "package": "github.com/andydotxyz/beebui/cmd/beebui"
   },
   "version": "",
   "date": "2019-03-17T19:32:14+00:00"
@@ -41,8 +40,7 @@
   ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
-    "tag": "develop",
-    "dir": "cmd/bugs"
+    "package": "github.com/fyne-io/examples/cmd/bugs"
   },
   "version": "",
   "date": "2018-10-18T23:51:00+01:00"
@@ -65,8 +63,7 @@
   ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
-    "tag": "develop",
-    "dir": "cmd/calculator"
+    "package": "github.com/fyne-io/examples/cmd/calculator"
   },
   "version": "",
   "date": "2018-10-04T23:51:00+01:00"
@@ -89,8 +86,7 @@
   ],
   "source": {
     "git": "https://github.com/andydotxyz/dicomgraphics.git",
-    "tag": "master",
-    "dir": "cmd/dicomviewer"
+    "package": "github.com/andydotxyz/dicomgraphics/cmd/dicomviewer"
   },
   "version": "",
   "date": "2019-07-13T10:15:00+01:00"
@@ -113,15 +109,14 @@
   ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
-    "tag": "develop",
-    "dir": "cmd/fractal"
+    "package": "github.com/fyne-io/examples/cmd/fractal"
   },
   "version": "",
   "date": "2018-10-04T23:51:00+01:00"
 },{
   "id": "xyz.andy.gameboy",
   "name": "GameBoy.live",
-  "icon": "https://github.com/andydotxyz/fynegameboy/raw/master/gameboy.png",
+  "icon": "https://github.com/andydotxyz/fynegameboy/raw/master/Icon.png",
   "summary": "A Fyne based interface using the gameboy.live emulator written by AaronLiu (@HFO4).",
   "url": "https://apps.fyne.io/apps/gameboy.html",
 
@@ -137,8 +132,7 @@
   ],
   "source": {
     "git": "https://github.com/andydotxyz/fynegameboy.git",
-    "tag": "master",
-    "dir": ""
+    "package": "github.com/andydotxyz/fynegameboy"
   },
   "version": "",
   "date": "2019-03-10T22:31:00+00:00"
@@ -161,8 +155,7 @@
   ],
   "source": {
     "git": "https://github.com/gmlewis/go-gerber.git",
-    "tag": "master",
-    "dir": "gerber/viewer"
+    "package": "github.com/gmlewis/go-gerber/gerber/viewer"
   },
   "version": "",
   "date": "2019-03-14T23:22:50+00:00"
@@ -185,8 +178,7 @@
   ],
   "source": {
     "git": "https://github.com/lucor/fyne-opensnitch.git",
-    "tag": "master",
-    "dir": ""
+    "package": "github.com/lucor/fyne-opensnitch"
   },
   "version": "",
   "date": "2019-05-13T09:43:42+01:00"
@@ -209,8 +201,7 @@
   ],
   "source": {
     "git": "https://github.com/potato-arcade/p64.git",
-    "tag": "master",
-    "dir": "cmd/potato64"
+    "package": "github.com/potato-arcade/p64/cmd/potato64"
   },
   "version": "",
   "date": "2019-03-03T04:28:52+00:00"
@@ -233,8 +224,7 @@
   ],
   "source": {
     "git": "https://github.com/fyne-io/examples.git",
-    "tag": "develop",
-    "dir": "cmd/solitaire"
+    "package": "github.com/fyne-io/example/cmd/solitaire"
   },
   "version": "",
   "date": "2019-01-19T22:51:00+00:00"

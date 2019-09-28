@@ -26,7 +26,7 @@ type AppScreenshot struct {
 }
 
 type AppSource struct {
-	Git, Tag, Dir string
+	Git, Package string
 }
 
 type AppList []App
