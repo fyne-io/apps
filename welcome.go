@@ -110,6 +110,7 @@ func loadWelcome(apps AppList) fyne.CanvasObject {
 	w.developer = widget.NewLabel("")
 	w.link = widget.NewHyperlink("", nil)
 	w.summary = widget.NewLabel("")
+	w.summary.Wrapping = fyne.TextWrapWord
 	w.version = widget.NewLabel("")
 	w.date = widget.NewLabel("")
 	w.icon = &canvas.Image{}
