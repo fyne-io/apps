@@ -18,7 +18,7 @@ import (
 
 type welcome struct {
 	shownID             string
-	name, excerpt, date *widget.Label
+	name, summary, date *widget.Label
 	developer, version  *widget.Label
 	link                *widget.Hyperlink
 	icon, screenshot    *canvas.Image
@@ -31,7 +31,7 @@ func (w *welcome) loadAppDetail(app App) {
 	w.developer.SetText(app.Developer)
 	w.version.SetText(app.Version)
 	w.date.SetText(app.Date.Format("02 Jan 2006"))
-	w.excerpt.SetText(app.Summary)
+	w.summary.SetText(app.Summary)
 
 	w.icon.Resource = nil
 	go setImageFromURL(w.icon, app.Icon)
@@ -102,7 +102,7 @@ func loadWelcome(apps AppList) fyne.CanvasObject {
 	w.name = widget.NewLabel("")
 	w.developer = widget.NewLabel("")
 	w.link = widget.NewHyperlink("", nil)
-	w.excerpt = widget.NewLabel("")
+	w.summary = widget.NewLabel("")
 	w.version = widget.NewLabel("")
 	w.date = widget.NewLabel("")
 	w.icon = &canvas.Image{}
@@ -111,16 +111,17 @@ func loadWelcome(apps AppList) fyne.CanvasObject {
 	w.screenshot.SetMinSize(fyne.NewSize(320, 240))
 	w.screenshot.FillMode = canvas.ImageFillContain
 
-	content := widget.NewForm(
+	dateAndVersion := fyne.NewContainerWithLayout(layout.NewGridLayout(2), w.date,
+		widget.NewForm(&widget.FormItem{Text: "Version", Widget: w.version}))
+
+	form := widget.NewForm(
 		&widget.FormItem{Text: "Name", Widget: w.name},
 		&widget.FormItem{Text: "Developer", Widget: w.developer},
 		&widget.FormItem{Text: "Website", Widget: w.link},
-		&widget.FormItem{Text: "Excerpt", Widget: w.excerpt},
-		&widget.FormItem{Text: "Screenshot", Widget: w.screenshot},
-		&widget.FormItem{Text: "Version", Widget: w.version},
-		&widget.FormItem{Text: "Date", Widget: w.date},
+		&widget.FormItem{Text: "Summary", Widget: w.summary},
+		&widget.FormItem{Text: "Date", Widget: dateAndVersion},
 	)
-	details := fyne.NewContainerWithLayout(&iconHoverLayout{content:content, icon:w.icon}, content, w.icon)
+	details := fyne.NewContainerWithLayout(&iconHoverLayout{content:form, icon:w.icon}, form, w.icon)
 
 	list := widget.NewVBox()
 	for _, app := range apps {
@@ -138,5 +139,6 @@ func loadWelcome(apps AppList) fyne.CanvasObject {
 	if len(apps) > 0 {
 		w.loadAppDetail(apps[0])
 	}
-	return fyne.NewContainerWithLayout(layout.NewBorderLayout(nil, buttons, list, nil), buttons, list, details)
+	content := fyne.NewContainerWithLayout(layout.NewBorderLayout(details, nil, nil, nil), details, w.screenshot)
+	return fyne.NewContainerWithLayout(layout.NewBorderLayout(nil, buttons, list, nil), buttons, list, content)
 }

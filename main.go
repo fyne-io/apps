@@ -26,6 +26,7 @@ func main() {
 		return
 	}
 	w.SetContent(loadWelcome(apps))
+	w.Resize(fyne.NewSize(680, 400))
 
 	w.ShowAndRun()
 }
