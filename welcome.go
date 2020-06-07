@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -70,13 +71,19 @@ func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
 	if err != nil {
 		return nil, err
 	}
+	if res.StatusCode != 200 {
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
+	}
 
 	bytes, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	parsed, _ := url.Parse(urlStr)
+	parsed, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
 	name := filepath.Base(parsed.Path)
 	return fyne.NewStaticResource(name, bytes), nil
 }
