@@ -12,13 +12,15 @@ import (
 
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
+	"fyne.io/fyne/cmd/fyne/commands"
+	"fyne.io/fyne/dialog"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
 	"fyne.io/fyne/widget"
 )
 
 type welcome struct {
-	shownID             string
+	shownID, shownPkg   string
 	name, summary, date *widget.Label
 	developer, version  *widget.Label
 	link                *widget.Hyperlink
@@ -27,6 +29,7 @@ type welcome struct {
 
 func (w *welcome) loadAppDetail(app App) {
 	w.shownID = app.ID
+	w.shownPkg = app.Source.Package
 
 	w.name.SetText(app.Name)
 	w.developer.SetText(app.Developer)
@@ -104,7 +107,7 @@ func (i *iconHoverLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
 	return i.content.MinSize()
 }
 
-func loadWelcome(apps AppList) fyne.CanvasObject {
+func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w := &welcome{}
 	w.name = widget.NewLabel("")
 	w.developer = widget.NewLabel("")
@@ -141,7 +144,18 @@ func loadWelcome(apps AppList) fyne.CanvasObject {
 
 	buttons := widget.NewHBox(
 		layout.NewSpacer(),
-		widget.NewButton("Install", func() {}),
+		widget.NewButton("Install", func() {
+			prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
+			prog.Show()
+			get := commands.NewGetter()
+			err := get.Get(w.shownPkg)
+			prog.Hide()
+			if err != nil {
+				dialog.ShowError(err, win)
+			} else {
+				dialog.ShowInformation("Installed", "App was installed successfully :)", win)
+			}
+		}),
 	)
 
 	if len(apps) > 0 {
