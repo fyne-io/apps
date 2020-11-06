@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne"
 	"fyne.io/fyne/canvas"
 	"fyne.io/fyne/cmd/fyne/commands"
+	"fyne.io/fyne/container"
 	"fyne.io/fyne/dialog"
 	"fyne.io/fyne/layout"
 	"fyne.io/fyne/theme"
@@ -134,15 +135,20 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	)
 	details := fyne.NewContainerWithLayout(&iconHoverLayout{content:form, icon:w.icon}, form, w.icon)
 
-	list := widget.NewVBox()
-	for _, app := range apps {
-		capture := app
-		list.Append(widget.NewButton(app.Name, func() {
-			w.loadAppDetail(capture)
-		}))
+	list := widget.NewList(func() int {
+		return len(apps)
+	},
+	func() fyne.CanvasObject {
+		return widget.NewLabel("A longish app name")
+	},
+	func(id int, obj fyne.CanvasObject) {
+		obj.(*widget.Label).SetText(apps[id].Name)
+	})
+	list.OnSelected = func(id int) {
+		w.loadAppDetail(apps[id])
 	}
 
-	buttons := widget.NewHBox(
+	buttons := container.NewHBox(
 		layout.NewSpacer(),
 		widget.NewButton("Install", func() {
 			prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
@@ -161,6 +167,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	if len(apps) > 0 {
 		w.loadAppDetail(apps[0])
 	}
-	content := fyne.NewContainerWithLayout(layout.NewBorderLayout(details, nil, nil, nil), details, w.screenshot)
-	return fyne.NewContainerWithLayout(layout.NewBorderLayout(nil, buttons, list, nil), buttons, list, content)
+	content := container.NewBorder(details, nil, nil, nil, w.screenshot)
+	return container.NewBorder(nil, nil, list, nil,
+		container.NewBorder(nil, buttons, nil, nil, content))
 }
