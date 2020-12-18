@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 )
 
@@ -39,6 +40,10 @@ func parseAppList(reader io.Reader) (AppList, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	sort.Slice(appList, func(a, b int) bool {
+		return appList[a].Name < appList[b].Name
+	})
 
 	return appList, nil
 }
