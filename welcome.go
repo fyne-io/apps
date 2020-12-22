@@ -45,6 +45,7 @@ func (w *welcome) loadAppDetail(app App) {
 	if len(app.Screenshots) > 0 {
 		go setImageFromURL(w.screenshot, app.Screenshots[0].Image)
 	}
+	w.screenshot.Refresh()
 
 	parsed, err := url.Parse(app.Website)
 	if err != nil {
