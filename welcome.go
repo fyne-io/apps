@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 
 	"fyne.io/fyne"
@@ -21,16 +22,17 @@ import (
 )
 
 type welcome struct {
-	shownID, shownPkg   string
-	name, summary, date *widget.Label
-	developer, version  *widget.Label
-	link                *widget.Hyperlink
-	icon, screenshot    *canvas.Image
+	shownID, shownPkg, shownIcon string
+	name, summary, date          *widget.Label
+	developer, version           *widget.Label
+	link                         *widget.Hyperlink
+	icon, screenshot             *canvas.Image
 }
 
 func (w *welcome) loadAppDetail(app App) {
 	w.shownID = app.ID
 	w.shownPkg = app.Source.Package
+	w.shownIcon = app.Icon
 
 	w.name.SetText(app.Name)
 	w.developer.SetText(app.Developer)
@@ -155,6 +157,8 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
 			prog.Show()
 			get := commands.NewGetter()
+			tmpIcon := downloadIcon(w.shownIcon)
+			get.SetIcon(tmpIcon)
 			err := get.Get(w.shownPkg)
 			prog.Hide()
 			if err != nil {
@@ -162,6 +166,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			} else {
 				dialog.ShowInformation("Installed", "App was installed successfully :)", win)
 			}
+			os.Remove(tmpIcon)
 		}),
 	)
 
@@ -171,4 +176,26 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	content := container.NewBorder(details, nil, nil, nil, w.screenshot)
 	return container.NewBorder(nil, nil, list, nil,
 		container.NewBorder(nil, buttons, nil, nil, content))
+}
+
+func downloadIcon(url string) string {
+	req, err := http.Get(url)
+	if err != nil {
+		fyne.LogError("Failed to access icon url: "+url, err)
+		return ""
+	}
+	tmp := filepath.Join(os.TempDir(), "Fyne-Icon.png")
+	data, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		fyne.LogError("Failed tread icon data", err)
+		return ""
+	}
+
+	err = ioutil.WriteFile(tmp, data, 0666)
+	if err != nil {
+		fyne.LogError("Failed to get write icon to: "+tmp, err)
+		return ""
+	}
+
+	return tmp
 }
