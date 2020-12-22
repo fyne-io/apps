@@ -5,6 +5,13 @@
 *.so
 *.dylib
 
+apps
+apps.app
+apps.exe
+apps.tar.gz
+
+.DS_Store
+
 # Test binary, build with `go test -c`
 *.test
 
