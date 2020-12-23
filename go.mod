@@ -3,7 +3,7 @@ module fyne.io/apps
 go 1.12
 
 require (
-	fyne.io/fyne v1.4.2-0.20201222204318-0bf39e3af474
+	fyne.io/fyne v1.4.2-0.20201223095328-a029ede2d76e
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20201108214237-06ea97f0c265 // indirect
 	github.com/stretchr/testify v1.6.1
 	golang.org/x/image v0.0.0-20201208152932-35266b937fa6 // indirect
