@@ -20,6 +20,7 @@ type App struct {
 	Version string
 
 	Source AppSource
+	Requires string
 }
 
 type AppScreenshot struct {
@@ -41,6 +42,7 @@ func parseAppList(reader io.Reader) (AppList, error) {
 		return nil, err
 	}
 
+	appList = appList.filterCompatible()
 	sort.Slice(appList, func(a, b int) bool {
 		return appList[a].Name < appList[b].Name
 	})

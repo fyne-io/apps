@@ -1,10 +1,11 @@
 [{
   "id": "xyz.andy.beebui",
-  "name": "beebUI",
+  "name": "BeebUI",
   "icon": "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true",
   "summary": "A BBC Micro Emulator based on Fyne and skx/gobasic",
   "url": "https://apps.fyne.io/apps/beebui.html",
 
+  "requires": "linux",
   "category": "entertainment",
   "website": "https://github.com/andydotxyz/beebui",
   "developer": "Andy Williams",
