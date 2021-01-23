@@ -154,6 +154,11 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	buttons := container.NewHBox(
 		layout.NewSpacer(),
 		widget.NewButton("Install", func() {
+			if w.shownPkg == "fyne.io/apps" {
+				dialog.ShowInformation("System app", "Cannot overwrite the installer app", win)
+				return
+			}
+
 			prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
 			prog.Show()
 			get := commands.NewGetter()

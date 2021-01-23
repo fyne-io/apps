@@ -33,7 +33,7 @@ func TestParseAppList(t *testing.T) {
 
 	app := list[0]
 	assert.Equal(t, "xyz.andy.beebui", app.ID)
-	assert.Equal(t, "beebUI", app.Name)
+	assert.Equal(t, "BeebUI", app.Name)
 	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true", app.Icon)
 	assert.Equal(t, time.Date(2019, 03, 17, 19, 32, 14, 0, time.Local), app.Date)
 	assert.Equal(t, "A BBC Micro Emulator based on Fyne and skx/gobasic", app.Summary)
@@ -49,4 +49,5 @@ func TestParseAppList(t *testing.T) {
 	assert.Equal(t, "https://github.com/andydotxyz/beebui.git", app.Source.Git)
 	assert.Equal(t, "github.com/andydotxyz/beebui/cmd/beebui", app.Source.Package)
 	assert.Equal(t, "", app.Version)
+	assert.Equal(t, "linux", app.Requires)
 }
