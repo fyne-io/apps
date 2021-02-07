@@ -164,6 +164,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			get := commands.NewGetter()
 			tmpIcon := downloadIcon(w.shownIcon)
 			get.SetIcon(tmpIcon)
+			get.SetAppID(w.shownID)
 			err := get.Get(w.shownPkg)
 			prog.Hide()
 			if err != nil {
