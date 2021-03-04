@@ -19,7 +19,7 @@ type App struct {
 	Date    time.Time
 	Version string
 
-	Source AppSource
+	Source   AppSource
 	Requires string
 }
 

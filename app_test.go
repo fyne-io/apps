@@ -10,7 +10,7 @@ import (
 func TestApp_FilterCompatible(t *testing.T) {
 	l := AppList{
 		App{Requires: runtime.GOOS},
-		App{Requires: runtime.GOOS+",powerpc"},
+		App{Requires: runtime.GOOS + ",powerpc"},
 		App{Requires: "powerpc"},
 		App{},
 	}

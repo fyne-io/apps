@@ -1,9 +1,10 @@
 package main
 
 import (
+	"log"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
-	"log"
 )
 
 func main() {
