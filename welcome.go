@@ -26,7 +26,10 @@ type welcome struct {
 	name, summary, date          *widget.Label
 	developer, version           *widget.Label
 	link                         *widget.Hyperlink
-	icon, screenshot             *canvas.Image
+	icon                         *canvas.Image
+
+	screenshots  [5]*canvas.Image
+	screenScroll *container.Scroll
 }
 
 func (w *welcome) loadAppDetail(app App) {
@@ -43,11 +46,19 @@ func (w *welcome) loadAppDetail(app App) {
 	w.icon.Resource = nil
 	go setImageFromURL(w.icon, app.Icon)
 
-	w.screenshot.Resource = nil
-	if len(app.Screenshots) > 0 {
-		go setImageFromURL(w.screenshot, app.Screenshots[0].Image)
+	for i := 0; i < len(w.screenshots); i++ {
+		w.screenshots[i].Resource = nil
+
+		if i < len(app.Screenshots) {
+			w.screenshots[i].Show()
+			go setImageFromURL(w.screenshots[i], app.Screenshots[i].Image)
+		} else {
+			w.screenshots[i].Hide()
+		}
+
+		w.screenshots[i].Refresh()
 	}
-	w.screenshot.Refresh()
+	w.screenScroll.ScrollToTop()
 
 	parsed, err := url.Parse(app.Website)
 	if err != nil {
@@ -104,7 +115,7 @@ func (i *iconHoverLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	i.content.Resize(size)
 
 	i.icon.Resize(fyne.NewSize(64, 64))
-	i.icon.Move(fyne.NewPos(size.Width - i.icon.Size().Width, 0))
+	i.icon.Move(fyne.NewPos(size.Width-i.icon.Size().Width, 0))
 }
 
 func (i *iconHoverLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
@@ -122,9 +133,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w.date = widget.NewLabel("")
 	w.icon = &canvas.Image{}
 	w.icon.FillMode = canvas.ImageFillContain
-	w.screenshot = &canvas.Image{}
-	w.screenshot.SetMinSize(fyne.NewSize(320, 240))
-	w.screenshot.FillMode = canvas.ImageFillContain
+	makeScreenshots(w)
 
 	dateAndVersion := fyne.NewContainerWithLayout(layout.NewGridLayout(2), w.date,
 		widget.NewForm(&widget.FormItem{Text: "Version", Widget: w.version}))
@@ -136,17 +145,17 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		&widget.FormItem{Text: "Summary", Widget: w.summary},
 		&widget.FormItem{Text: "Date", Widget: dateAndVersion},
 	)
-	details := fyne.NewContainerWithLayout(&iconHoverLayout{content:form, icon:w.icon}, form, w.icon)
+	details := fyne.NewContainerWithLayout(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
 
 	list := widget.NewList(func() int {
 		return len(apps)
 	},
-	func() fyne.CanvasObject {
-		return widget.NewLabel("A longish app name")
-	},
-	func(id int, obj fyne.CanvasObject) {
-		obj.(*widget.Label).SetText(apps[id].Name)
-	})
+		func() fyne.CanvasObject {
+			return widget.NewLabel("A longish app name")
+		},
+		func(id int, obj fyne.CanvasObject) {
+			obj.(*widget.Label).SetText(apps[id].Name)
+		})
 	list.OnSelected = func(id int) {
 		w.loadAppDetail(apps[id])
 	}
@@ -176,12 +185,24 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		}),
 	)
 
+	w.screenScroll = container.NewHScroll(container.NewHBox(
+		w.screenshots[0], w.screenshots[1], w.screenshots[2], w.screenshots[3], w.screenshots[4]))
 	if len(apps) > 0 {
 		w.loadAppDetail(apps[0])
 	}
-	content := container.NewBorder(details, nil, nil, nil, w.screenshot)
+	content := container.NewBorder(details, nil, nil, nil, w.screenScroll)
 	return container.NewBorder(nil, nil, list, nil,
 		container.NewBorder(nil, buttons, nil, nil, content))
+}
+
+func makeScreenshots(w *welcome) {
+	for i := 0; i < len(w.screenshots); i++ {
+		img := &canvas.Image{}
+		img.SetMinSize(fyne.NewSize(320, 240))
+		img.FillMode = canvas.ImageFillContain
+
+		w.screenshots[i] = img
+	}
 }
 
 func downloadIcon(url string) string {
