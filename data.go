@@ -8,7 +8,11 @@ import (
 	"path/filepath"
 	"sort"
 	"time"
+
+	"fyne.io/fyne/v2"
 )
+
+const keyInstallPrefix = "installed."
 
 type App struct {
 	ID, Name, Icon     string
@@ -32,6 +36,18 @@ type AppSource struct {
 }
 
 type AppList []App
+
+func installedVersion(a App) string {
+	return fyne.CurrentApp().Preferences().String(keyInstallPrefix+a.ID)
+}
+
+func markInstalled(a App) {
+	ver := a.Version
+	if ver == "" {
+		ver = "latest"
+	}
+	fyne.CurrentApp().Preferences().SetString(keyInstallPrefix+a.ID, ver)
+}
 
 func parseAppList(reader io.Reader) (AppList, error) {
 	decode := json.NewDecoder(reader)

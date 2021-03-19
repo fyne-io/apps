@@ -22,20 +22,19 @@ import (
 )
 
 type welcome struct {
-	shownID, shownPkg, shownIcon string
-	name, summary, date          *widget.Label
-	developer, version           *widget.Label
-	link                         *widget.Hyperlink
-	icon                         *canvas.Image
+	shownApp            App
+	name, summary, date *widget.Label
+	developer, version  *widget.Label
+	link                *widget.Hyperlink
+	icon                *canvas.Image
 
 	screenshots  [5]*canvas.Image
 	screenScroll *container.Scroll
+	install      *widget.Button
 }
 
 func (w *welcome) loadAppDetail(app App) {
-	w.shownID = app.ID
-	w.shownPkg = app.Source.Package
-	w.shownIcon = app.Icon
+	w.shownApp = app
 
 	w.name.SetText(app.Name)
 	w.developer.SetText(app.Developer)
@@ -67,6 +66,18 @@ func (w *welcome) loadAppDetail(app App) {
 	}
 	w.link.SetText(parsed.Host)
 	w.link.SetURL(parsed)
+
+	installed := installedVersion(app)
+	if installed == "" {
+		w.install.SetText("Install")
+		w.install.Enable()
+	} else if installed == app.Version {
+		w.install.SetText("Installed")
+		w.install.Disable()
+	} else {
+		w.install.SetText("Upgrade")
+		w.install.Enable()
+	}
 }
 
 func setImageFromURL(img *canvas.Image, location string) {
@@ -160,29 +171,32 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		w.loadAppDetail(apps[id])
 	}
 
+	w.install = widget.NewButton("Install", func() {
+		if w.shownApp.Source.Package == "fyne.io/apps" {
+			dialog.ShowInformation("System app", "Cannot overwrite the installer app", win)
+			return
+		}
+
+		prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
+		prog.Show()
+		get := commands.NewGetter()
+		tmpIcon := downloadIcon(w.shownApp.Icon)
+		get.SetIcon(tmpIcon)
+		get.SetAppID(w.shownApp.ID)
+		err := get.Get(w.shownApp.Source.Package)
+		prog.Hide()
+		if err != nil {
+			dialog.ShowError(err, win)
+		} else {
+			dialog.ShowInformation("Installed", "App was installed successfully :)", win)
+			markInstalled(w.shownApp)
+			w.loadAppDetail(w.shownApp)
+		}
+		os.Remove(tmpIcon)
+	})
 	buttons := container.NewHBox(
 		layout.NewSpacer(),
-		widget.NewButton("Install", func() {
-			if w.shownPkg == "fyne.io/apps" {
-				dialog.ShowInformation("System app", "Cannot overwrite the installer app", win)
-				return
-			}
-
-			prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
-			prog.Show()
-			get := commands.NewGetter()
-			tmpIcon := downloadIcon(w.shownIcon)
-			get.SetIcon(tmpIcon)
-			get.SetAppID(w.shownID)
-			err := get.Get(w.shownPkg)
-			prog.Hide()
-			if err != nil {
-				dialog.ShowError(err, win)
-			} else {
-				dialog.ShowInformation("Installed", "App was installed successfully :)", win)
-			}
-			os.Remove(tmpIcon)
-		}),
+		w.install,
 	)
 
 	w.screenScroll = container.NewHScroll(container.NewHBox(

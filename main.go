@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	a := app.New()
+	a := app.NewWithID("io.fyne.apps")
 	w := a.NewWindow("Fyne Applications")
 
 	data, err := loadAppListFromWeb()
