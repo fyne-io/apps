@@ -38,7 +38,7 @@ type AppSource struct {
 type AppList []App
 
 func installedVersion(a App) string {
-	return fyne.CurrentApp().Preferences().String(keyInstallPrefix+a.ID)
+	return fyne.CurrentApp().Preferences().String(keyInstallPrefix + a.ID)
 }
 
 func markInstalled(a App) {
