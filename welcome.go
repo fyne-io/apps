@@ -67,13 +67,14 @@ func (w *welcome) loadAppDetail(app App) {
 	w.link.SetText(parsed.Host)
 	w.link.SetURL(parsed)
 
-	installed := installedVersion(app)
-	if installed == "" {
-		w.install.SetText("Install")
-		w.install.Enable()
-	} else if installed == app.Version {
+	installedVer := installedVersion(app)
+	installed := installedVer != "" && installedVer == app.Version
+	if installed || app.Source.Package == "fyne.io/apps" {
 		w.install.SetText("Installed")
 		w.install.Disable()
+	} else if installedVer == "" {
+		w.install.SetText("Install")
+		w.install.Enable()
 	} else {
 		w.install.SetText("Upgrade")
 		w.install.Enable()
@@ -172,11 +173,6 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	}
 
 	w.install = widget.NewButton("Install", func() {
-		if w.shownApp.Source.Package == "fyne.io/apps" {
-			dialog.ShowInformation("System app", "Cannot overwrite the installer app", win)
-			return
-		}
-
 		prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
 		prog.Show()
 		get := commands.NewGetter()
