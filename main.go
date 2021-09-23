@@ -1,3 +1,5 @@
+//go:generate fyne bundle -o bundled.go Icon.png
+
 package main
 
 import (
@@ -9,6 +11,7 @@ import (
 
 func main() {
 	a := app.NewWithID("io.fyne.apps")
+	a.SetIcon(resourceIconPng)
 	w := a.NewWindow("Fyne Applications")
 
 	data, err := loadAppListFromWeb()
