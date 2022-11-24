@@ -13,7 +13,7 @@ To do so you will need to have Go and C compilers installed - if you need help y
 Once set up execute the following
 
 ```
-$ go get fyne.io/fyne/cmd/fyne
+$ go install fyne.io/fyne/v2/cmd/fyne@latest
 $ fyne get fyne.io/apps
 ```
 
