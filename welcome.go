@@ -5,7 +5,7 @@ import (
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"os"
@@ -93,7 +93,7 @@ func setImageFromURL(img *canvas.Image, location string) {
 		img.Resource = res
 	}
 
-	canvas.Refresh(img)
+	img.Refresh()
 }
 
 func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
@@ -105,7 +105,7 @@ func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	bytes, err := ioutil.ReadAll(res.Body)
+	bytes, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w.icon.FillMode = canvas.ImageFillContain
 	makeScreenshots(w)
 
-	dateAndVersion := fyne.NewContainerWithLayout(layout.NewGridLayout(2), w.date,
+	dateAndVersion := container.NewGridWithColumns(2, w.date,
 		widget.NewForm(&widget.FormItem{Text: "Version", Widget: w.version}))
 
 	form := widget.NewForm(
@@ -157,7 +157,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		&widget.FormItem{Text: "Summary", Widget: w.summary},
 		&widget.FormItem{Text: "Date", Widget: dateAndVersion},
 	)
-	details := fyne.NewContainerWithLayout(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
+	details := container.New(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
 
 	list := widget.NewList(func() int {
 		return len(apps)
@@ -173,7 +173,10 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	}
 
 	w.install = widget.NewButton("Install", func() {
-		prog := dialog.NewProgressInfinite("Downloading...", "Please wait while the app is installed", win)
+		bar := widget.NewProgressBarInfinite()
+		content := container.NewVBox(widget.NewLabel("Please wait while the app is installed"), bar)
+		prog := dialog.NewCustomWithoutButtons("Downloading...", content, win)
+		bar.Start()
 		prog.Show()
 		get := commands.NewGetter()
 		tmpIcon := downloadIcon(w.shownApp.Icon)
@@ -181,6 +184,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		get.SetAppID(w.shownApp.ID)
 		err := get.Get(w.shownApp.Source.Package)
 		prog.Hide()
+		bar.Stop()
 		if err != nil {
 			dialog.ShowError(err, win)
 		} else {
@@ -222,13 +226,13 @@ func downloadIcon(url string) string {
 		return ""
 	}
 	tmp := filepath.Join(os.TempDir(), "Fyne-Icon.png")
-	data, err := ioutil.ReadAll(req.Body)
+	data, err := io.ReadAll(req.Body)
 	if err != nil {
 		fyne.LogError("Failed tread icon data", err)
 		return ""
 	}
 
-	err = ioutil.WriteFile(tmp, data, 0666)
+	err = os.WriteFile(tmp, data, 0666)
 	if err != nil {
 		fyne.LogError("Failed to get write icon to: "+tmp, err)
 		return ""
