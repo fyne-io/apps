@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -63,6 +64,9 @@ func parseAppList(reader io.Reader) (AppList, error) {
 		return appList[a].Name < appList[b].Name
 	})
 
+	sort.Slice(appList, func(i, j int) bool {
+		return strings.Compare(strings.ToLower(appList[i].Name), strings.ToLower(appList[j].Name)) < 0
+	})
 	return appList, nil
 }
 

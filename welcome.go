@@ -130,7 +130,7 @@ func (i *iconHoverLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
 	i.icon.Move(fyne.NewPos(size.Width-i.icon.Size().Width, 0))
 }
 
-func (i *iconHoverLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+func (i *iconHoverLayout) MinSize(_ []fyne.CanvasObject) fyne.Size {
 	return i.content.MinSize()
 }
 
@@ -192,7 +192,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			markInstalled(w.shownApp)
 			w.loadAppDetail(w.shownApp)
 		}
-		os.Remove(tmpIcon)
+		_ = os.Remove(tmpIcon)
 	})
 	buttons := container.NewHBox(
 		layout.NewSpacer(),
