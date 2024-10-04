@@ -9,7 +9,7 @@ func (l AppList) filterCompatible() AppList {
 	ret := make(AppList, 0)
 	for _, v := range l {
 		if v.isCompatible() {
-			ret = append(ret, v)
+			ret[v.ID] = v
 		}
 	}
 	return ret

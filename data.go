@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sort"
-	"strings"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -16,10 +14,10 @@ import (
 const keyInstallPrefix = "installed."
 
 type App struct {
-	ID, Name, Icon     string
-	Developer, Summary string
-	URL, Website       string
-	Screenshots        []AppScreenshot
+	ID, Name, Icon         string
+	Developer, Summary     string
+	URL, Website, Category string
+	Screenshots            []AppScreenshot
 
 	Date    time.Time
 	Version string
@@ -36,7 +34,7 @@ type AppSource struct {
 	Git, Package string
 }
 
-type AppList []App
+type AppList map[string]App
 
 func installedVersion(a App) string {
 	return fyne.CurrentApp().Preferences().String(keyInstallPrefix + a.ID)
@@ -53,21 +51,18 @@ func markInstalled(a App) {
 func parseAppList(reader io.Reader) (AppList, error) {
 	decode := json.NewDecoder(reader)
 
-	appList := AppList{}
-	err := decode.Decode(&appList)
+	var list []App
+	err := decode.Decode(&list)
 	if err != nil {
 		return nil, err
 	}
 
-	appList = appList.filterCompatible()
-	sort.Slice(appList, func(a, b int) bool {
-		return appList[a].Name < appList[b].Name
-	})
+	appList := AppList{}
+	for _, a := range list {
+		appList[a.ID] = a
+	}
 
-	sort.Slice(appList, func(i, j int) bool {
-		return strings.Compare(strings.ToLower(appList[i].Name), strings.ToLower(appList[j].Name)) < 0
-	})
-	return appList, nil
+	return appList.filterCompatible(), nil
 }
 
 func loadAppListFromWeb() (io.ReadCloser, error) {

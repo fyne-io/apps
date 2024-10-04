@@ -32,7 +32,7 @@ func TestParseAppList(t *testing.T) {
 
 	assert.Equal(t, 10, len(list))
 
-	app := list[0]
+	app := list["xyz.andy.beebui"]
 	assert.Equal(t, "xyz.andy.beebui", app.ID)
 	assert.Equal(t, "BeebUI", app.Name)
 	assert.Equal(t, "https://github.com/andydotxyz/beebui/blob/master/icon.png?raw=true", app.Icon)

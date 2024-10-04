@@ -10,6 +10,8 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sort"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -20,6 +22,8 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
+
+const defaultBranch = "graphics"
 
 type welcome struct {
 	shownApp            App
@@ -159,18 +163,44 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	)
 	details := container.New(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
 
-	list := widget.NewList(func() int {
-		return len(apps)
-	},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("A longish app name")
+	nodes := mapAppList(apps)
+	tree := widget.NewTree(
+		func(id widget.TreeNodeID) []widget.TreeNodeID {
+			return nodes[id]
 		},
-		func(id int, obj fyne.CanvasObject) {
+		func(id widget.TreeNodeID) bool {
+			if id == "" {
+				return true
+			}
+			for _, n := range nodes[""] {
+				if n == id {
+					return true
+				}
+			}
+
+			return false
+		},
+		func(_ bool) fyne.CanvasObject {
+			return widget.NewLabel(" ->  A longish app name")
+		},
+		func(id widget.TreeNodeID, branch bool, obj fyne.CanvasObject) {
+			if branch {
+				obj.(*widget.Label).SetText(id)
+				return
+			}
+
 			obj.(*widget.Label).SetText(apps[id].Name)
 		})
-	list.OnSelected = func(id int) {
+	tree.OnSelected = func(id widget.TreeNodeID) {
+		for _, n := range nodes[""] {
+			if n == id {
+				return
+			}
+		}
+
 		w.loadAppDetail(apps[id])
 	}
+	tree.OpenBranch(defaultBranch)
 
 	w.install = widget.NewButton("Install", func() {
 		bar := widget.NewProgressBarInfinite()
@@ -202,10 +232,10 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w.screenScroll = container.NewHScroll(container.NewHBox(
 		w.screenshots[0], w.screenshots[1], w.screenshots[2], w.screenshots[3], w.screenshots[4]))
 	if len(apps) > 0 {
-		w.loadAppDetail(apps[0])
+		w.loadAppDetail(apps[nodes[defaultBranch][0]])
 	}
 	content := container.NewBorder(details, nil, nil, nil, w.screenScroll)
-	return container.NewBorder(nil, nil, list, nil,
+	return container.NewBorder(nil, nil, tree, nil,
 		container.NewBorder(nil, buttons, nil, nil, content))
 }
 
@@ -217,6 +247,40 @@ func makeScreenshots(w *welcome) {
 
 		w.screenshots[i] = img
 	}
+}
+
+func mapAppList(list AppList) map[string][]string {
+	ret := make(map[string][]string)
+
+	for id, a := range list {
+		cat := a.Category
+		if cat == "" {
+			continue
+		}
+
+		similar, ok := ret[cat]
+		if !ok {
+			similar = []string{}
+		}
+
+		similar = append(similar, id)
+		ret[cat] = similar
+	}
+
+	var cats []string
+	for cat, ids := range ret {
+		sort.Slice(ids, func(i, j int) bool {
+			return strings.Compare(strings.ToLower(list[ids[i]].Name), strings.ToLower(list[ids[j]].Name)) < 0
+		})
+
+		cats = append(cats, cat)
+	}
+
+	sort.Slice(cats, func(i, j int) bool {
+		return strings.Compare(cats[i], cats[j]) < 0
+	})
+	ret[""] = cats
+	return ret
 }
 
 func downloadIcon(url string) string {
