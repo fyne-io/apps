@@ -1,0 +1,8 @@
+Website = "https://apps.fyne.io"
+
+[Details]
+  Icon = "Icon.png"
+  Name = "Fyne Applications"
+  ID = "io.fyne.apps"
+  Version = "0.3.0"
+  Build = 1
