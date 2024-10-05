@@ -29,8 +29,8 @@ func main() {
 		fyne.LogError("Parse error", err)
 		return
 	}
-	w.SetContent(loadWelcome(apps, w))
-	w.Resize(fyne.NewSize(680, 400))
+	w.SetContent(loadUI(apps, w))
+	w.Resize(fyne.NewSize(680, 520))
 
 	w.ShowAndRun()
 }

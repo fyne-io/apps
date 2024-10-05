@@ -23,8 +23,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-const defaultBranch = "graphics"
-
 type welcome struct {
 	shownApp            App
 	name, summary, date *widget.Label
@@ -138,7 +136,7 @@ func (i *iconHoverLayout) MinSize(_ []fyne.CanvasObject) fyne.Size {
 	return i.content.MinSize()
 }
 
-func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
+func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w := &welcome{}
 	w.name = widget.NewLabel("")
 	w.developer = widget.NewLabel("")
@@ -163,6 +161,7 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 	)
 	details := container.New(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
 
+	var app, featured *fyne.Container
 	nodes := mapAppList(apps)
 	tree := widget.NewTree(
 		func(id widget.TreeNodeID) []widget.TreeNodeID {
@@ -172,6 +171,10 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			if id == "" {
 				return true
 			}
+			if id == "featured" {
+				return false
+			}
+
 			for _, n := range nodes[""] {
 				if n == id {
 					return true
@@ -184,6 +187,10 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 			return widget.NewLabel(" ->  A longish app name")
 		},
 		func(id widget.TreeNodeID, branch bool, obj fyne.CanvasObject) {
+			if id == "featured" {
+				obj.(*widget.Label).SetText("Featured")
+				return
+			}
 			if branch {
 				title := id
 				title = strings.ToUpper(id[:1]) + title[1:]
@@ -199,9 +206,18 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		tree.OpenBranch(selected.Category)
 		tree.Select(id)
 
+		app.Show()
+		featured.Hide()
 		w.loadAppDetail(selected)
 	}
+	tree.Select("featured")
 	tree.OnSelected = func(id widget.TreeNodeID) {
+		if id == "featured" {
+			featured.Show()
+			app.Hide()
+			return
+		}
+
 		for _, n := range nodes[""] {
 			if n == id {
 				tree.OpenBranch(id)
@@ -211,7 +227,6 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 
 		selectApp(id)
 	}
-	tree.OpenBranch(defaultBranch)
 
 	w.install = widget.NewButton("Install", func() {
 		bar := widget.NewProgressBarInfinite()
@@ -242,12 +257,14 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 
 	w.screenScroll = container.NewHScroll(container.NewHBox(
 		w.screenshots[0], w.screenshots[1], w.screenshots[2], w.screenshots[3], w.screenshots[4]))
-	if len(apps) > 0 {
-		w.loadAppDetail(apps[nodes[defaultBranch][0]])
-	}
+
 	content := container.NewBorder(details, nil, nil, nil, w.screenScroll)
+	app = container.NewBorder(nil, buttons, nil, nil, content)
+	featured = makeFeatured(apps, selectApp)
+
+	app.Hide()
 	return container.NewBorder(nil, nil, tree, nil,
-		container.NewBorder(nil, buttons, nil, nil, content))
+		container.NewStack(featured, app))
 }
 
 func makeScreenshots(w *welcome) {
@@ -290,7 +307,7 @@ func mapAppList(list AppList) map[string][]string {
 	sort.Slice(cats, func(i, j int) bool {
 		return strings.Compare(cats[i], cats[j]) < 0
 	})
-	ret[""] = cats
+	ret[""] = append([]string{"featured"}, cats...)
 	return ret
 }
 
