@@ -185,20 +185,31 @@ func loadWelcome(apps AppList, win fyne.Window) fyne.CanvasObject {
 		},
 		func(id widget.TreeNodeID, branch bool, obj fyne.CanvasObject) {
 			if branch {
-				obj.(*widget.Label).SetText(id)
+				title := id
+				title = strings.ToUpper(id[:1]) + title[1:]
+
+				obj.(*widget.Label).SetText(title)
 				return
 			}
 
 			obj.(*widget.Label).SetText(apps[id].Name)
 		})
+	selectApp := func(id string) {
+		selected := apps[id]
+		tree.OpenBranch(selected.Category)
+		tree.Select(id)
+
+		w.loadAppDetail(selected)
+	}
 	tree.OnSelected = func(id widget.TreeNodeID) {
 		for _, n := range nodes[""] {
 			if n == id {
+				tree.OpenBranch(id)
 				return
 			}
 		}
 
-		w.loadAppDetail(apps[id])
+		selectApp(id)
 	}
 	tree.OpenBranch(defaultBranch)
 
