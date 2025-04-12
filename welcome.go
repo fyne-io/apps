@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -45,19 +46,21 @@ func (w *welcome) loadAppDetail(app App) {
 	w.summary.SetText(app.Summary)
 
 	w.icon.Resource = nil
+	w.icon.Image = nil
+	w.icon.Refresh()
+	for _, scr := range w.screenshots {
+		scr.Resource = nil
+		scr.Image = nil
+		scr.Refresh()
+		scr.Hide()
+	}
+
 	go setImageFromURL(w.icon, app.Icon)
 
 	for i := 0; i < len(w.screenshots); i++ {
-		w.screenshots[i].Resource = nil
-
 		if i < len(app.Screenshots) {
-			w.screenshots[i].Show()
 			go setImageFromURL(w.screenshots[i], app.Screenshots[i].Image)
-		} else {
-			w.screenshots[i].Hide()
 		}
-
-		w.screenshots[i].Refresh()
 	}
 	w.screenScroll.ScrollToTop()
 
@@ -88,17 +91,23 @@ func setImageFromURL(img *canvas.Image, location string) {
 		return
 	}
 
-	res, err := loadResourceFromURL(location)
-	if err != nil {
-		img.Resource = theme.WarningIcon()
-	} else {
-		img.Resource = res
-	}
+	src, err := loadImageFromURL(location)
 
-	img.Refresh()
+	fyne.Do(func() {
+		if err != nil {
+			img.Resource = theme.WarningIcon()
+			img.Image = nil
+		} else {
+			img.Resource = nil
+			img.Image = src
+		}
+
+		img.Refresh()
+		img.Show()
+	})
 }
 
-func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
+func loadImageFromURL(urlStr string) (image.Image, error) {
 	res, err := http.Get(urlStr)
 	if err != nil {
 		return nil, err
@@ -107,17 +116,9 @@ func loadResourceFromURL(urlStr string) (fyne.Resource, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	parsed, err := url.Parse(urlStr)
-	if err != nil {
-		return nil, err
-	}
-	name := filepath.Base(parsed.Path)
-	return fyne.NewStaticResource(name, bytes), nil
+	ret, _, err := image.Decode(res.Body)
+	res.Body.Close()
+	return ret, err
 }
 
 // iconHoverLayout specifies a layout that floats an icon image top right over other content

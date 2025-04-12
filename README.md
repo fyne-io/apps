@@ -8,13 +8,13 @@ It will also require some setup, shown in *Installing*, below.
 
 ## Installing
 
-The easiest way to install this app is using the `fyne` command and it's `get` utility.
+The easiest way to install this app is using the `fyne` command, and it's `install` utility.
 To do so you will need to have Go and C compilers installed - if you need help you can see the [fyne prerequisites](https://developer.fyne.io/started/).
 Once set up execute the following
 
 ```
-$ go install fyne.io/fyne/v2/cmd/fyne@latest
-$ fyne get fyne.io/apps
+$ go install fyne.io/tools/v2/cmd/fyne@latest
+$ fyne install fyne.io/apps
 ```
 
 The commands above will install the `Apps` app in your standard system location.
