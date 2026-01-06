@@ -235,21 +235,27 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 		prog := dialog.NewCustomWithoutButtons("Downloading...", content, win)
 		bar.Start()
 		prog.Show()
-		get := commands.NewGetter()
-		tmpIcon := downloadIcon(w.shownApp.Icon)
-		get.SetIcon(tmpIcon)
-		get.SetAppID(w.shownApp.ID)
-		err := get.Get(w.shownApp.Source.Package)
-		prog.Hide()
-		bar.Stop()
-		if err != nil {
-			dialog.ShowError(err, win)
-		} else {
-			dialog.ShowInformation("Installed", "App was installed successfully :)", win)
-			markInstalled(w.shownApp)
-			w.loadAppDetail(w.shownApp)
-		}
-		_ = os.Remove(tmpIcon)
+
+		go func() {
+			get := commands.NewGetter()
+			tmpIcon := downloadIcon(w.shownApp.Icon)
+			get.SetIcon(tmpIcon)
+			get.SetAppID(w.shownApp.ID)
+			err := get.Get(w.shownApp.Source.Package)
+
+			fyne.Do(func() {
+				prog.Hide()
+				bar.Stop()
+				if err != nil {
+					dialog.ShowError(err, win)
+				} else {
+					dialog.ShowInformation("Installed", "App was installed successfully :)", win)
+					markInstalled(w.shownApp)
+					w.loadAppDetail(w.shownApp)
+				}
+				_ = os.Remove(tmpIcon)
+			})
+		}()
 	})
 	buttons := container.NewHBox(
 		layout.NewSpacer(),
