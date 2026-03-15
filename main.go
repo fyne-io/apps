@@ -30,7 +30,7 @@ func main() {
 		return
 	}
 	w.SetContent(loadUI(apps, w))
-	w.Resize(fyne.NewSize(680, 520))
+	w.Resize(fyne.NewSize(680, 560))
 
 	w.ShowAndRun()
 }

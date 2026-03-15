@@ -25,7 +25,7 @@ You can then launch it like any other app.
 Once installed launch the app from your app launcher, file browser or programme manager by tapping on the icon:
 
 <p align="center">
-<img src="/Icon.png" width="256" />
+<img src="/Icon.png" width="128" />
 </p>
 
 When loaded you should see something like the following screenshot:

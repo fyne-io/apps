@@ -1,11 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"image"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+	"image/color"
 	"io"
 	"net/http"
 	"net/url"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -31,9 +33,11 @@ type welcome struct {
 	link                *widget.Hyperlink
 	icon                *canvas.Image
 
-	screenshots  [5]*canvas.Image
-	screenScroll *container.Scroll
-	install      *widget.Button
+	screenshots      [5]*canvas.Image
+	screenScroll     *container.Scroll
+	install          *widget.Button
+	iconLoader       imageLoader
+	screenshotLoader [5]imageLoader
 }
 
 func (w *welcome) loadAppDetail(app App) {
@@ -55,11 +59,15 @@ func (w *welcome) loadAppDetail(app App) {
 		scr.Hide()
 	}
 
-	go setImageFromURL(w.icon, app.Icon)
+	w.iconLoader.load(w.icon, app.Icon)
 
 	for i := 0; i < len(w.screenshots); i++ {
 		if i < len(app.Screenshots) {
-			go setImageFromURL(w.screenshots[i], app.Screenshots[i].Image)
+			w.screenshots[i].Show()
+			w.screenshotLoader[i].load(w.screenshots[i], app.Screenshots[i].Image)
+		} else {
+			w.screenshotLoader[i].load(w.screenshots[i], "") // cancel any in-flight
+			w.screenshots[i].Hide()
 		}
 	}
 	w.screenScroll.ScrollToTop()
@@ -86,60 +94,160 @@ func (w *welcome) loadAppDetail(app App) {
 	}
 }
 
-func setImageFromURL(img *canvas.Image, location string) {
-	if location == "" {
-		return
-	}
-
-	src, err := loadImageFromURL(location)
-
-	fyne.Do(func() {
-		if err != nil {
-			img.Resource = theme.WarningIcon()
-			img.Image = nil
-		} else {
-			img.Resource = nil
-			img.Image = src
-		}
-
-		img.Refresh()
-		img.Show()
-	})
+// imageLoader manages cancellable image loading for a single canvas.Image.
+// Calling load cancels any in-flight request for this image before starting a new one.
+type imageLoader struct {
+	mu     sync.Mutex
+	cancel context.CancelFunc
 }
 
-func loadImageFromURL(urlStr string) (image.Image, error) {
-	res, err := http.Get(urlStr)
+func (l *imageLoader) load(img *canvas.Image, location string) {
+	l.mu.Lock()
+	if l.cancel != nil {
+		l.cancel()
+	}
+	img.Resource = nil
+	img.Refresh()
+	if location == "" {
+		l.cancel = nil
+		l.mu.Unlock()
+		return
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	l.cancel = cancel
+	l.mu.Unlock()
+
+	go func() {
+		res, err := loadResourceFromURL(ctx, location)
+		if ctx.Err() != nil {
+			return // cancelled, don't touch the image
+		}
+		fyne.Do(func() {
+			if err != nil {
+				img.Resource = theme.WarningIcon()
+			} else {
+				img.Resource = res
+			}
+			img.Refresh()
+		})
+	}()
+}
+
+func loadResourceFromURL(ctx context.Context, urlStr string) (fyne.Resource, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
 	if err != nil {
 		return nil, err
 	}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
 	if res.StatusCode != 200 {
 		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	ret, _, err := image.Decode(res.Body)
-	res.Body.Close()
-	return ret, err
+	bytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	parsed, err := url.Parse(urlStr)
+	if err != nil {
+		return nil, err
+	}
+	name := filepath.Base(parsed.Path)
+	return fyne.NewStaticResource(name, bytes), nil
 }
 
-// iconHoverLayout specifies a layout that floats an icon image top right over other content
-type iconHoverLayout struct {
-	content, icon fyne.CanvasObject
+// appCardLayout positions an icon centered above a label
+type appCardLayout struct {
+	icon, label fyne.CanvasObject
 }
 
-func (i *iconHoverLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
-	i.content.Resize(size)
+func (a *appCardLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
+	iconSize := float32(48)
+	labelH := a.label.MinSize().Height
+	totalH := iconSize + 4 + labelH
+	topPad := (size.Height - totalH) / 2
+	if topPad < 4 {
+		topPad = 4
+	}
 
-	i.icon.Resize(fyne.NewSize(64, 64))
-	i.icon.Move(fyne.NewPos(size.Width-i.icon.Size().Width, 0))
+	a.icon.Resize(fyne.NewSize(iconSize, iconSize))
+	a.icon.Move(fyne.NewPos((size.Width-iconSize)/2, topPad))
+
+	a.label.Resize(fyne.NewSize(size.Width, labelH))
+	a.label.Move(fyne.NewPos(0, topPad+iconSize+4))
 }
 
-func (i *iconHoverLayout) MinSize(_ []fyne.CanvasObject) fyne.Size {
-	return i.content.MinSize()
+func (a *appCardLayout) MinSize(_ []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(110, 100)
+}
+
+func makeAppCardTemplate() fyne.CanvasObject {
+	icon := &canvas.Image{}
+	icon.SetMinSize(fyne.NewSquareSize(48))
+	icon.FillMode = canvas.ImageFillContain
+
+	name := widget.NewLabel("Template")
+	name.Alignment = fyne.TextAlignCenter
+	name.Truncation = fyne.TextTruncateEllipsis
+
+	cardContent := container.New(&appCardLayout{icon: icon, label: name}, icon, name)
+	return container.NewPadded(cardContent)
+}
+
+// cardLoaders tracks an imageLoader per grid cell icon so recycled cells cancel prior loads.
+var cardLoaders sync.Map
+
+func updateAppCard(obj fyne.CanvasObject, app App) {
+	padded := obj.(*fyne.Container)
+	card := padded.Objects[0].(*fyne.Container) // the appCardLayout container
+	icon := card.Objects[0].(*canvas.Image)
+	label := card.Objects[1].(*widget.Label)
+
+	label.SetText(app.Name)
+	icon.Resource = nil
+	icon.Image = nil
+	icon.Refresh()
+
+	val, _ := cardLoaders.LoadOrStore(icon, &imageLoader{})
+	loader := val.(*imageLoader)
+	loader.load(icon, app.Icon)
+}
+
+// detailHeaderLayout places the icon to the left with info to its right
+type detailHeaderLayout struct {
+	icon, info fyne.CanvasObject
+}
+
+func (d *detailHeaderLayout) Layout(_ []fyne.CanvasObject, size fyne.Size) {
+	iconSize := float32(80)
+	d.icon.Resize(fyne.NewSize(iconSize, iconSize))
+	d.icon.Move(fyne.NewPos(0, 0))
+
+	infoW := size.Width - iconSize - 12
+	if infoW < 0 {
+		infoW = 0
+	}
+	d.info.Resize(fyne.NewSize(infoW, size.Height))
+	d.info.Move(fyne.NewPos(iconSize+12, 0))
+}
+
+func (d *detailHeaderLayout) MinSize(_ []fyne.CanvasObject) fyne.Size {
+	infoMin := d.info.MinSize()
+	h := infoMin.Height
+	if h < 80 {
+		h = 80
+	}
+	return fyne.NewSize(80+12+infoMin.Width, h)
 }
 
 func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w := &welcome{}
 	w.name = widget.NewLabel("")
+	w.name.TextStyle.Bold = true
 	w.developer = widget.NewLabel("")
 	w.link = widget.NewHyperlink("", nil)
 	w.summary = widget.NewLabel("")
@@ -147,89 +255,128 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 	w.version = widget.NewLabel("")
 	w.date = widget.NewLabel("")
 	w.icon = &canvas.Image{}
+	w.icon.SetMinSize(fyne.NewSquareSize(80))
 	w.icon.FillMode = canvas.ImageFillContain
 	makeScreenshots(w)
 
-	dateAndVersion := container.NewGridWithColumns(2, w.date,
-		widget.NewForm(&widget.FormItem{Text: "Version", Widget: w.version}))
+	// Build the detail view
+	w.install = widget.NewButton("Install", nil) // callback set below
+	w.install.Importance = widget.HighImportance
 
-	form := widget.NewForm(
-		&widget.FormItem{Text: "Name", Widget: w.name},
-		&widget.FormItem{Text: "Developer", Widget: w.developer},
-		&widget.FormItem{Text: "Website", Widget: w.link},
-		&widget.FormItem{Text: "Summary", Widget: w.summary},
-		&widget.FormItem{Text: "Date", Widget: dateAndVersion},
+	infoBlock := container.NewVBox(
+		w.name,
+		w.developer,
+		container.NewHBox(w.link, layout.NewSpacer(), w.install),
 	)
-	details := container.New(&iconHoverLayout{content: form, icon: w.icon}, form, w.icon)
+	w.name.TextStyle.Bold = true
 
-	var app, featured *fyne.Container
-	nodes := mapAppList(apps)
-	tree := widget.NewTree(
-		func(id widget.TreeNodeID) []widget.TreeNodeID {
-			return nodes[id]
+	header := container.New(&detailHeaderLayout{icon: w.icon, info: infoBlock}, w.icon, infoBlock)
+
+	metaLine := container.NewHBox(
+		widget.NewLabel("Version:"),
+		w.version,
+		layout.NewSpacer(),
+		w.date,
+	)
+
+	w.screenScroll = container.NewHScroll(container.NewHBox(
+		w.screenshots[0], w.screenshots[1], w.screenshots[2], w.screenshots[3], w.screenshots[4]))
+
+	detailContent := container.NewVBox(
+		header,
+		widget.NewSeparator(),
+		w.summary,
+		widget.NewSeparator(),
+		metaLine,
+		w.screenScroll,
+	)
+	detailScroll := container.NewVScroll(detailContent)
+
+	// Build the category tabs and app grid
+	categories := sortedCategories(apps)
+	filteredIDs := sortedApps(apps, "")
+
+	var detailView, browseView *fyne.Container
+
+	appGrid := widget.NewGridWrap(
+		func() int {
+			return len(filteredIDs)
 		},
-		func(id widget.TreeNodeID) bool {
-			if id == "" {
-				return true
+		makeAppCardTemplate,
+		func(id widget.GridWrapItemID, obj fyne.CanvasObject) {
+			if int(id) < len(filteredIDs) {
+				updateAppCard(obj, apps[filteredIDs[id]])
 			}
-			if id == "featured" {
-				return false
-			}
-
-			for _, n := range nodes[""] {
-				if n == id {
-					return true
-				}
-			}
-
-			return false
 		},
-		func(_ bool) fyne.CanvasObject {
-			return widget.NewLabel(" ->  A longish app name")
-		},
-		func(id widget.TreeNodeID, branch bool, obj fyne.CanvasObject) {
-			if id == "featured" {
-				obj.(*widget.Label).SetText("Featured")
-				return
-			}
-			if branch {
-				title := id
-				title = strings.ToUpper(id[:1]) + title[1:]
+	)
+	appGrid.OnSelected = func(id widget.GridWrapItemID) {
+		if int(id) < len(filteredIDs) {
+			appID := filteredIDs[id]
+			w.loadAppDetail(apps[appID])
+			detailView.Show()
+			browseView.Hide()
+		}
+		appGrid.UnselectAll()
+	}
 
-				obj.(*widget.Label).SetText(title)
-				return
-			}
+	filterGrid := func(category string) {
+		filteredIDs = sortedApps(apps, category)
+		appGrid.Refresh()
+		appGrid.ScrollToTop()
+	}
 
-			obj.(*widget.Label).SetText(apps[id].Name)
+	catBtns := []fyne.CanvasObject{}
+	allBtn := widget.NewButton("All", func() {
+		filterGrid("")
+	})
+	allBtn.Importance = widget.HighImportance
+	catBtns = append(catBtns, allBtn)
+	for _, cat := range categories {
+		c := cat
+		title := strings.ToUpper(c[:1]) + c[1:]
+		btn := widget.NewButton(title, func() {
+			filterGrid(c)
 		})
-	selectApp := func(id string) {
-		selected := apps[id]
-		tree.OpenBranch(selected.Category)
-		tree.Select(id)
-
-		app.Show()
-		featured.Hide()
-		w.loadAppDetail(selected)
+		catBtns = append(catBtns, btn)
 	}
-	tree.Select("featured")
-	tree.OnSelected = func(id widget.TreeNodeID) {
-		if id == "featured" {
-			featured.Show()
-			app.Hide()
-			return
-		}
+	catBar := container.NewHBox(catBtns...)
+	catScroll := container.NewHScroll(catBar)
 
-		for _, n := range nodes[""] {
-			if n == id {
-				tree.OpenBranch(id)
-				return
-			}
-		}
+	// Featured banner
+	featuredBanner := makeFeatured(apps, func(id string) {
+		w.loadAppDetail(apps[id])
+		detailView.Show()
+		browseView.Hide()
+	})
 
-		selectApp(id)
-	}
+	// Section headers
+	featuredHeader := makeSectionHeader("Featured")
+	browseHeader := makeSectionHeader("Browse Apps")
 
-	w.install = widget.NewButton("Install", func() {
+	topSection := container.NewVBox(
+		featuredHeader,
+		featuredBanner,
+		widget.NewSeparator(),
+		browseHeader,
+		catScroll,
+	)
+
+	browseView = container.NewBorder(topSection, nil, nil, nil, appGrid)
+
+	backBtn := widget.NewButtonWithIcon("Back", theme.NavigateBackIcon(), func() {
+		browseView.Show()
+		detailView.Hide()
+	})
+	backBtn.Importance = widget.LowImportance
+
+	detailView = container.NewBorder(
+		container.NewHBox(backBtn),
+		nil, nil, nil,
+		detailScroll,
+	)
+
+	// Wire up install button
+	w.install.OnTapped = func() {
 		bar := widget.NewProgressBarInfinite()
 		content := container.NewVBox(widget.NewLabel("Please wait while the app is installed"), bar)
 		prog := dialog.NewCustomWithoutButtons("Downloading...", content, win)
@@ -256,22 +403,17 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 				_ = os.Remove(tmpIcon)
 			})
 		}()
-	})
-	buttons := container.NewHBox(
-		layout.NewSpacer(),
-		w.install,
-	)
+	}
 
-	w.screenScroll = container.NewHScroll(container.NewHBox(
-		w.screenshots[0], w.screenshots[1], w.screenshots[2], w.screenshots[3], w.screenshots[4]))
+	detailView.Hide()
+	return container.NewStack(browseView, detailView)
+}
 
-	content := container.NewBorder(details, nil, nil, nil, w.screenScroll)
-	app = container.NewBorder(nil, buttons, nil, nil, content)
-	featured = makeFeatured(apps, selectApp)
-
-	app.Hide()
-	return container.NewBorder(nil, nil, tree, nil,
-		container.NewStack(featured, app))
+func makeSectionHeader(title string) fyne.CanvasObject {
+	label := canvas.NewText(title, color.NRGBA{R: 100, G: 149, B: 237, A: 255})
+	label.TextSize = 18
+	label.TextStyle.Bold = true
+	return container.NewPadded(label)
 }
 
 func makeScreenshots(w *welcome) {
@@ -284,38 +426,32 @@ func makeScreenshots(w *welcome) {
 	}
 }
 
-func mapAppList(list AppList) map[string][]string {
-	ret := make(map[string][]string)
-
-	for id, a := range list {
-		cat := a.Category
-		if cat == "" {
-			continue
+func sortedCategories(apps AppList) []string {
+	catMap := map[string]bool{}
+	for _, a := range apps {
+		if a.Category != "" {
+			catMap[a.Category] = true
 		}
-
-		similar, ok := ret[cat]
-		if !ok {
-			similar = []string{}
-		}
-
-		similar = append(similar, id)
-		ret[cat] = similar
 	}
-
 	var cats []string
-	for cat, ids := range ret {
-		sort.Slice(ids, func(i, j int) bool {
-			return strings.Compare(strings.ToLower(list[ids[i]].Name), strings.ToLower(list[ids[j]].Name)) < 0
-		})
-
-		cats = append(cats, cat)
+	for c := range catMap {
+		cats = append(cats, c)
 	}
+	sort.Strings(cats)
+	return cats
+}
 
-	sort.Slice(cats, func(i, j int) bool {
-		return strings.Compare(cats[i], cats[j]) < 0
+func sortedApps(apps AppList, category string) []string {
+	var ids []string
+	for id, a := range apps {
+		if category == "" || a.Category == category {
+			ids = append(ids, id)
+		}
+	}
+	sort.Slice(ids, func(i, j int) bool {
+		return strings.ToLower(apps[ids[i]].Name) < strings.ToLower(apps[ids[j]].Name)
 	})
-	ret[""] = append([]string{"featured"}, cats...)
-	return ret
+	return ids
 }
 
 func downloadIcon(url string) string {
