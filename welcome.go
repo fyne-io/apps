@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
@@ -62,6 +61,10 @@ func (w *welcome) loadAppDetail(app App) {
 	w.iconLoader.load(w.icon, app.Icon)
 
 	for i := 0; i < len(w.screenshots); i++ {
+		w.screenshots[i].Resource = nil
+		w.screenshots[i].Image = nil
+		w.screenshots[i].Refresh()
+
 		if i < len(app.Screenshots) {
 			w.screenshots[i].Show()
 			w.screenshotLoader[i].load(w.screenshots[i], app.Screenshots[i].Image)
@@ -118,7 +121,7 @@ func (l *imageLoader) load(img *canvas.Image, location string) {
 	l.mu.Unlock()
 
 	go func() {
-		res, err := loadResourceFromURL(ctx, location)
+		res, err := fyne.CacheResourceFromURLString(location)
 		if ctx.Err() != nil {
 			return // cancelled, don't touch the image
 		}
@@ -131,33 +134,6 @@ func (l *imageLoader) load(img *canvas.Image, location string) {
 			img.Refresh()
 		})
 	}()
-}
-
-func loadResourceFromURL(ctx context.Context, urlStr string) (fyne.Resource, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", urlStr, nil)
-	if err != nil {
-		return nil, err
-	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
-	}
-
-	bytes, err := io.ReadAll(res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	parsed, err := url.Parse(urlStr)
-	if err != nil {
-		return nil, err
-	}
-	name := filepath.Base(parsed.Path)
-	return fyne.NewStaticResource(name, bytes), nil
 }
 
 // appCardLayout positions an icon centered above a label
