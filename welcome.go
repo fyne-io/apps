@@ -270,7 +270,9 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 
 	// Build the category tabs and app grid
 	categories := sortedCategories(apps)
-	filteredIDs := sortedApps(apps, "")
+	currentSort := sortByDate
+	currentCategory := ""
+	filteredIDs := sortedApps(apps, currentCategory, currentSort)
 
 	var detailView, browseView *fyne.Container
 
@@ -296,27 +298,26 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 	}
 
 	filterGrid := func(category string) {
-		filteredIDs = sortedApps(apps, category)
+		currentCategory = category
+		filteredIDs = sortedApps(apps, currentCategory, currentSort)
 		appGrid.Refresh()
 		appGrid.ScrollToTop()
 	}
 
-	catBtns := []fyne.CanvasObject{}
-	allBtn := widget.NewButton("All", func() {
-		filterGrid("")
-	})
-	allBtn.Importance = widget.HighImportance
-	catBtns = append(catBtns, allBtn)
+	catTabs := container.NewAppTabs(
+		container.NewTabItem("All", layout.NewSpacer()),
+	)
 	for _, cat := range categories {
-		c := cat
-		title := strings.ToUpper(c[:1]) + c[1:]
-		btn := widget.NewButton(title, func() {
-			filterGrid(c)
-		})
-		catBtns = append(catBtns, btn)
+		title := strings.ToUpper(cat[:1]) + cat[1:]
+		catTabs.Append(container.NewTabItem(title, layout.NewSpacer()))
 	}
-	catBar := container.NewHBox(catBtns...)
-	catScroll := container.NewHScroll(catBar)
+	catTabs.OnSelected = func(tab *container.TabItem) {
+		if tab.Text == "All" {
+			filterGrid("")
+		} else {
+			filterGrid(strings.ToLower(tab.Text))
+		}
+	}
 
 	// Featured banner
 	featuredBanner := makeFeatured(apps, func(id string) {
@@ -329,12 +330,22 @@ func loadUI(apps AppList, win fyne.Window) fyne.CanvasObject {
 	featuredHeader := makeSectionHeader("Featured")
 	browseHeader := makeSectionHeader("Browse Apps")
 
+	sortSelect := widget.NewSelect([]string{sortByDate, sortByName}, func(val string) {
+		currentSort = val
+		filteredIDs = sortedApps(apps, currentCategory, currentSort)
+		appGrid.Refresh()
+		appGrid.ScrollToTop()
+	})
+	sortSelect.Selected = currentSort
+
+	browseRow := container.NewHBox(browseHeader, layout.NewSpacer(), sortSelect)
+
 	topSection := container.NewVBox(
 		featuredHeader,
 		featuredBanner,
 		widget.NewSeparator(),
-		browseHeader,
-		catScroll,
+		browseRow,
+		catTabs,
 	)
 
 	browseView = container.NewBorder(topSection, nil, nil, nil, appGrid)
@@ -417,16 +428,28 @@ func sortedCategories(apps AppList) []string {
 	return cats
 }
 
-func sortedApps(apps AppList, category string) []string {
+const (
+	sortByDate = "Newest"
+	sortByName = "A-Z"
+)
+
+func sortedApps(apps AppList, category, sortMode string) []string {
 	var ids []string
 	for id, a := range apps {
 		if category == "" || a.Category == category {
 			ids = append(ids, id)
 		}
 	}
-	sort.Slice(ids, func(i, j int) bool {
-		return strings.ToLower(apps[ids[i]].Name) < strings.ToLower(apps[ids[j]].Name)
-	})
+	switch sortMode {
+	case sortByName:
+		sort.Slice(ids, func(i, j int) bool {
+			return strings.ToLower(apps[ids[i]].Name) < strings.ToLower(apps[ids[j]].Name)
+		})
+	default: // sortByDate – newest first
+		sort.Slice(ids, func(i, j int) bool {
+			return apps[ids[i]].Date.After(apps[ids[j]].Date)
+		})
+	}
 	return ids
 }
 
