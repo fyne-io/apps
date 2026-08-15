@@ -88,7 +88,7 @@ func (w *welcome) loadAppDetail(app App) {
 	if installed || app.Source.Package == "fyne.io/apps" {
 		w.install.SetText("Installed")
 		w.install.Disable()
-	} else if installedVer == "" {
+	} else if installedVer == "" || app.Version == "" {
 		w.install.SetText("Install")
 		w.install.Enable()
 	} else {
